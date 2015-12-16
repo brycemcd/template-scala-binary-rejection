@@ -39,15 +39,26 @@ class DataSource (
     //Get RDD of Events.
     PEventStore.find(
       appName = dsp.appName,
-      entityType = Some("user"), // specify data entity type
-      eventNames = Some(List("$set")) // specify data event name
+      entityType = Some("listicle"), // specify data entity type
+      eventNames = Some(List("tag")) // specify data event name
 
       // Convert collected RDD of events to and RDD of Observation
       // objects.
     )(sc).map(e => {
       val label : String = e.properties.get[String]("label")
+      val tagLabel : Doulbe = label match {
+        case "Software" =>
+          1.0
+        case "Data science" =>
+          2.0
+        case "Business-y stuff" =>
+          3.0
+        case _ =>
+          99.0
+      }
+
       Observation(
-        if (label == "1") 1.0 else 0.0,
+        tagLabel,
         e.properties.get[String]("text"),
         label
       )
