@@ -1,7 +1,7 @@
   {
   "id": "default",
   "description": "Default settings",
-  "engineFactory": "org.template.textclassification.TextClassificationEngine",
+  "engineFactory": "org.template.textclassification.BinaryRejectEngine",
   "datasource": {
     "params": {
       "appName": "rejectRules"

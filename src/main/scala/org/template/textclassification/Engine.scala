@@ -33,10 +33,7 @@ class ActualResult(
 
 
 // 4. Initialize the engine.
-        //"VWlogisticSGD" -> classOf[VowpalLogisticRegressionWithSGDAlgorithm],
-        //"bid-lr" -> classOf[BIDMachLRAlgorithm]
-        //"lr" -> classOf[LRAlgorithm]
-object TextClassificationEngine extends EngineFactory {
+object BinaryRejectEngine extends EngineFactory {
   override
   def apply() = {
     new Engine(

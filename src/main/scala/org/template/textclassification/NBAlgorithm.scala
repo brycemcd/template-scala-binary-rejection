@@ -67,6 +67,7 @@ lambda: Double
       wordCountThreshold(query)
   }
 
+  // TODO: if I've rejected a query before, reject it again
   def predict(query : String) : PredictedResult = {
     val str : String = shouldReject(query) match {
       case true => "reject"

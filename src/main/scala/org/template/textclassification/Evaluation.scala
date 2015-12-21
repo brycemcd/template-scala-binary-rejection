@@ -24,7 +24,7 @@ object AccuracyEvaluation extends Evaluation {
 
   // Define Engine and Metric used in Evaluation.
   engineMetric = (
-    TextClassificationEngine(),
+    BinaryRejectEngine(),
     new Accuracy
   )
 }
@@ -36,13 +36,11 @@ object EngineParamsList extends EngineParamsGenerator {
 
   // Set data source and preparator parameters.
   private[this] val baseEP = EngineParams(
-    dataSourceParams = DataSourceParams(appName = "MyTextApp", evalK = Some(3)),
-    preparatorParams = PreparatorParams(nGram = 2, 5000, true) 
+    //dataSourceParams = DataSourceParams(appName = "MyTextApp", evalK = Some(3)),
+    //preparatorParams = PreparatorParams(nGram = 2, 5000, true) 
   )
 
   // Set the algorithm params for which we will assess an accuracy score.
-    //baseEP.copy(algorithmParamsList = Seq(("lr", LRAlgorithmParams(0.5)))),
-    //baseEP.copy(algorithmParamsList = Seq(("lr", LRAlgorithmParams(1.25))))
   engineParamsList = Seq(
     baseEP.copy(algorithmParamsList = Seq(("nb", NBAlgorithmParams(0.25)))),
     baseEP.copy(algorithmParamsList = Seq(("nb", NBAlgorithmParams(1.0))))
