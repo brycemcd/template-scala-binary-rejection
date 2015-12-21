@@ -17,9 +17,9 @@ import org.apache.spark.rdd.RDD
 // cross validation.
 
 case class DataSourceParams(
-                             appName: String,
-                             evalK: Option[Int]
-                             ) extends Params
+  appName: String,
+  evalK: Option[Int]
+) extends Params
 
 
 
@@ -35,14 +35,16 @@ class DataSource (
 
   // Helper function used to store data given
   // a SparkContext.
-  private def readEventData(sc: SparkContext) : RDD[Observation] = {
+  // TODO this is pretty much just wasting computer cycles. Eventually, this will
+  // check if I've rejected the article before
+  private def readEventData(sc: SparkContext) : RDD[Listicle] = {
     //Get RDD of Events.
     PEventStore.find(
       appName = dsp.appName,
       entityType = Some("doc"), // specify data entity type
       eventNames = Some(List("listicle")) // specify data event name
 
-      // Convert collected RDD of events to and RDD of Observation
+      // Convert collected RDD of events to and RDD of Listicle
       // objects.
     )(sc).map(e => {
       val label : String = e.properties.getOrElse("title", "DERP") match {
@@ -50,7 +52,7 @@ class DataSource (
           case l => l.trim.replace("\n", "nn")
       }
 
-      Observation(1.0, label, label)
+      Listicle(label)
     }).cache
   }
 
@@ -97,7 +99,7 @@ class DataSource (
       // Prepare test data for fold.
       val test = data.filter(_._2 % dsp.evalK.get == k)
         .map(_._1)
-        .map(e => (new Query(e.text), new ActualResult(e.category)))
+        .map(e => (new Query(e.text), new ActualResult(e.text)))
 
       (train, new EmptyEvaluationInfo, test)
     }
@@ -105,18 +107,14 @@ class DataSource (
 }
 
 
-// 3. Observation class serving as a wrapper for both our
+// 3. Listicle class serving as a wrapper for both our
 // data's class label and document string.
-case class Observation(
-                        label : Double,
-                        text : String,
-                        category :String
-                        ) extends Serializable
+case class Listicle( text : String) extends Serializable
 
 // 4. TrainingData class serving as a wrapper for all
 // read in from the Event Server.
 class TrainingData(
-                    val data : RDD[Observation],
+                    val data : RDD[Listicle],
                     val stopWords : Set[String]
                     ) extends Serializable with SanityCheck {
 
@@ -124,11 +122,11 @@ class TrainingData(
 
   def sanityCheck {
     try {
-      val obs : Array[Double] = data.takeSample(false, 5).map(_.label)
+      val obs : Array[String] = data.takeSample(false, 5).map(_.text)
 
       println()
       (0 until 5).foreach(
-        k => println("Observation " + (k + 1) +" label: " + obs(k))
+        k => println("Listicle " + (k + 1) +" text: " + obs(k))
       )
       println()
     } catch {

@@ -16,17 +16,8 @@
   },
   "algorithms": [
     {
-      "name": "nb",
-      "params": {
-       "maxIter": 1,
-        "regParam": 0.00000005,
-        "stepSize": 5.0,
-        "bitPrecision": 22,
-        "modelName": "model.vw",
-        "namespace": "n",
-        "ngram": 1,
-        "lambda": 0.25
-      }
+      "name": "br",
+      "params": {}
     }
   ]
 }
