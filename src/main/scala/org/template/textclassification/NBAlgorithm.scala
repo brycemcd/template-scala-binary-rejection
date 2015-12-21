@@ -43,52 +43,36 @@ lambda: Double
 ) extends Serializable {
 
 
+  private val rejectWords : Array[String] = Array("unsubscribe")
 
-  // 1. Fit a Naive Bayes model using the prepared data.
-
-  private val nb : NaiveBayesModel = NaiveBayes.train(
-    pd.transformedData.map(x=>x.point), lambda)
-
-
-
-  // 2. Set up linear algebra framework.
-
-  private def innerProduct (x : Array[Double], y : Array[Double]) : Double = {
-    x.zip(y).map(e => e._1 * e._2).sum
+  private def containsRejectWord(query : String) : Boolean = {
+    val words = query.split(" ")
+    val matchedIndex : Int = words.map(word => rejectWords.indexOf(word.toLowerCase)).max
+    matchedIndex > -1
   }
 
-  val normalize = (u: Array[Double]) => {
-    val uSum = u.sum
+  private val rejectPhrases : Array[String] = Array("A LERER HIPPEAU VENTURES EXPERIMENT")
 
-    u.map(e => e / uSum)
+  private def containsRejectPhrase(query: String) : Boolean = {
+    rejectPhrases.indexOf(query.trim) > -1
   }
 
-
-
-  private val scoreArray = nb.pi.zip(nb.theta)
-
-  // 3. Given a document string, return a vector of corresponding
-  // class membership probabilities.
-
-  private def getScores(doc: String): Array[Double] = {
-    // Helper function used to normalize probability scores.
-    // Returns an object of type Array[Double]
-
-    // Vectorize query,
-    val x: Vector = pd.transform(doc).vector
-
-    val z = scoreArray
-      .map(e => innerProduct(e._2, x.toArray) + e._1)
-
-    normalize((0 until z.size).map(k => exp(z(k) - z.max)).toArray)
+  private def wordCountThreshold(query : String, threshold : Integer = 4) = {
+    query.split(" ").length <= threshold
   }
 
-  // 4. Implement predict method for our model using
-  // the prediction rule given in tutorial.
+  private def shouldReject(query: String) : Boolean = {
+    containsRejectWord(query) ||
+      containsRejectPhrase(query) ||
+      wordCountThreshold(query)
+  }
 
-  def predict(doc : String) : PredictedResult = {
-    val x: Array[Double] = getScores(doc)
-    val y: (Double, Double) = (nb.labels zip x).maxBy(_._2)
-    new PredictedResult(pd.categoryMap.getOrElse(y._1, ""), y._2)
+  def predict(query : String) : PredictedResult = {
+    val str : String = shouldReject(query) match {
+      case true => "reject"
+      case false => "no-reject"
+    }
+
+    new PredictedResult(str, 1.0)
   }
 }

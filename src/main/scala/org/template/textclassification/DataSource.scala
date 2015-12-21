@@ -37,32 +37,33 @@ class DataSource (
   // a SparkContext.
   private def readEventData(sc: SparkContext) : RDD[Observation] = {
     //Get RDD of Events.
-    PEventStore.find(
+    val evts = PEventStore.find(
       appName = dsp.appName,
-      entityType = Some("listicle"), // specify data entity type
-      eventNames = Some(List("tag")) // specify data event name
+      entityType = Some("doc"), // specify data entity type
+      eventNames = Some(List("listicle")) // specify data event name
 
       // Convert collected RDD of events to and RDD of Observation
       // objects.
     )(sc).map(e => {
-      val label : String = e.properties.get[String]("label")
-      val tagLabel : Double = label match {
-        case "Software" =>
-          1.0
-        case "Data science" =>
-          2.0
-        case "Business-y stuff" =>
-          3.0
-        case _ =>
-          99.0
+      val label : String = e.properties.getOrElse("title", "DERP") match {
+          case "" => "NA"
+          case l => l.trim.replace("\n", "nn")
       }
+      //val tagLabel : Double = label match {
+        //case "Software" =>
+          //1.0
+        //case "Data science" =>
+          //2.0
+        //case "Business-y stuff" =>
+          //3.0
+        //case _ =>
+          //99.0
+      //}
 
-      Observation(
-        tagLabel,
-        e.properties.get[String]("text"),
-        label
-      )
-    }).cache
+      Observation(1.0, label, label)
+    })
+
+    evts.cache
   }
 
   // Helper function used to store stop words from

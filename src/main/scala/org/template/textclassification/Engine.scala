@@ -33,6 +33,9 @@ class ActualResult(
 
 
 // 4. Initialize the engine.
+        //"VWlogisticSGD" -> classOf[VowpalLogisticRegressionWithSGDAlgorithm],
+        //"bid-lr" -> classOf[BIDMachLRAlgorithm]
+        //"lr" -> classOf[LRAlgorithm]
 object TextClassificationEngine extends EngineFactory {
   override
   def apply() = {
@@ -40,12 +43,8 @@ object TextClassificationEngine extends EngineFactory {
       classOf[DataSource],
       classOf[Preparator],
       Map(
-        "VWlogisticSGD" -> classOf[VowpalLogisticRegressionWithSGDAlgorithm],
-        "nb" -> classOf[NBAlgorithm],
-        "lr" -> classOf[LRAlgorithm],
-        "bid-lr" -> classOf[BIDMachLRAlgorithm]
+        "nb" -> classOf[NBAlgorithm]
       ), classOf[Serving]
     )
   }
 }
-

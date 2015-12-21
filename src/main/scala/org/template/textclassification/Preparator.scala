@@ -44,13 +44,20 @@ class Preparator(pp: PreparatorParams) extends PPreparator[TrainingData, Prepare
 
   // Prepare your training data.
   def prepare(sc : SparkContext, td: TrainingData): PreparedData = {
-    new PreparedData(td, pp.nGram, pp.numFeatures, pp.SPPMI, sc)
+    //new PreparedData(td, pp.nGram, pp.numFeatures, pp.SPPMI, sc)
+    new PreparedData(td, sc)
   }
 }
 
 //------PreparedData------------------------
 
 class PreparedData(
+  val td: TrainingData,
+  @transient val sc: SparkContext
+) extends Serializable {
+}
+
+class PreparedDataOLD(
   val td: TrainingData,
   val nGram: Int,
   val numFeatures: Int,
