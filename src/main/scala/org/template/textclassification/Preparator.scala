@@ -24,11 +24,6 @@ import scala.math._
 case class PreparatorParams(
 ) extends Params
 
-case class VectorAndTextExample(
-                        vector: SparseVector,
-                        text : String
-                        ) extends Serializable
-
 case class LabeledPointAndTextExample(
                                  point: LabeledPoint,
                                  text : String

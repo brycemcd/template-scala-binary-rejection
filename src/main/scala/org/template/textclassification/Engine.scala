@@ -40,7 +40,7 @@ object BinaryRejectEngine extends EngineFactory {
       classOf[DataSource],
       classOf[Preparator],
       Map(
-        "nb" -> classOf[NBAlgorithm]
+        "nb" -> classOf[BinRejectAlgorithm]
       ), classOf[Serving]
     )
   }

@@ -10,37 +10,25 @@ import com.github.fommil.netlib.F2jBLAS
 
 import scala.math._
 
-// 1. Define parameters for Supervised Learning Model. We are
-// using a Naive Bayes classifier, which gives us only one
-// hyperparameter in this stage.
-
-case class  NBAlgorithmParams(
+// FIXME: not used, but Evaluation fails without it
+case class  BinRejectAlgoParams(
   lambda: Double
 ) extends Params
 
-
-
-// 2. Define SupervisedAlgorithm class.
-
-class NBAlgorithm(
-  val sap: NBAlgorithmParams
-) extends P2LAlgorithm[PreparedData, NBModel, Query, PredictedResult] {
+class BinRejectAlgorithm extends P2LAlgorithm[PreparedData, BinRejectModel, Query, PredictedResult] {
 
   // Train your model.
-  def train(sc: SparkContext, pd: PreparedData): NBModel = {
-    new NBModel(pd, sap.lambda)
+  def train(sc: SparkContext, pd: PreparedData): BinRejectModel = {
+    new BinRejectModel
   }
 
   // Prediction method for trained model.
-  def predict(model: NBModel, query: Query): PredictedResult = {
+  def predict(model: BinRejectModel, query: Query): PredictedResult = {
     model.predict(query.text)
   }
 }
 
-class NBModel(
-val pd: PreparedData,
-lambda: Double
-) extends Serializable {
+class BinRejectModel extends Serializable {
 
 
   private val rejectWords : Array[String] = Array("unsubscribe")
