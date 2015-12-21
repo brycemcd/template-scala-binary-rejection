@@ -46,7 +46,7 @@ class DataSource (
       // objects.
     )(sc).map(e => {
       val label : String = e.properties.get[String]("label")
-      val tagLabel : Doulbe = label match {
+      val tagLabel : Double = label match {
         case "Software" =>
           1.0
         case "Data science" =>
