@@ -7,6 +7,7 @@ import org.apache.spark.mllib.classification.NaiveBayes
 import org.apache.spark.mllib.classification.NaiveBayesModel
 import org.apache.spark.mllib.linalg.Vector
 import com.github.fommil.netlib.F2jBLAS
+import grizzled.slf4j.Logger
 
 import scala.math._
 
@@ -16,37 +17,58 @@ case class  BinRejectAlgoParams(
 ) extends Params
 
 class BinRejectAlgorithm extends P2LAlgorithm[PreparedData, BinRejectModel, Query, PredictedResult] {
-
+  @transient lazy val logger = Logger[this.type]
   // Train your model.
   def train(sc: SparkContext, pd: PreparedData): BinRejectModel = {
-    new BinRejectModel
+    new BinRejectModel(pd)
   }
 
   // Prediction method for trained model.
   def predict(model: BinRejectModel, query: Query): PredictedResult = {
-    model.predict(query.text)
+    model.predict(model, query.text)
   }
 }
 
-class BinRejectModel extends Serializable {
+// NOTE: model is just the prepared data
+class BinRejectModel(val pd: PreparedData) extends Serializable {
+  @transient lazy val logger = Logger[this.type]
 
+  private def alreadyDuplicated(model: BinRejectModel, query: String) : Boolean = {
+    val priorDecisions = model.pd.td
+    val matches = priorDecisions.filter(d => d.text == query)
+
+    val shouldReject = if(matches.length > 0 && matches(0).rejectScore > 0) true else false
+    logger.info(s"checking alreadyDuplicated: $shouldReject")
+    shouldReject
+  }
 
   private val rejectWords : Array[String] = Array("unsubscribe")
 
   private def containsRejectWord(query : String) : Boolean = {
     val words = query.split(" ")
     val matchedIndex : Int = words.map(word => rejectWords.indexOf(word.toLowerCase)).max
-    matchedIndex > -1
+
+    val shouldReject : Boolean = matchedIndex > -1
+    logger.info(s"checking containsRejectWord: $shouldReject")
+    shouldReject
   }
 
+  // TODO: add Read more stories on teh Quibb homepage
+  // TODO: add Support Quibb with a paid ...
   private val rejectPhrases : Array[String] = Array("A LERER HIPPEAU VENTURES EXPERIMENT")
 
   private def containsRejectPhrase(query: String) : Boolean = {
-    rejectPhrases.indexOf(query.trim) > -1
+    val shouldReject : Boolean =rejectPhrases.indexOf(query.trim) > -1
+
+    logger.info(s"checking containsRejectPhrase: $shouldReject")
+    shouldReject
   }
 
   private def wordCountThreshold(query : String, threshold : Integer = 4) = {
-    query.split(" ").length <= threshold
+    val shouldReject = query.split(" ").length <= threshold
+
+    logger.info(s"checking wordCountThreshold: $shouldReject")
+    shouldReject
   }
 
   private def shouldReject(query: String) : Boolean = {
@@ -56,11 +78,17 @@ class BinRejectModel extends Serializable {
   }
 
   // TODO: if I've rejected a query before, reject it again
-  def predict(query : String) : PredictedResult = {
-    val str : String = shouldReject(query) match {
+  // TODO: output logger.info when processing a query
+  def predict(model: BinRejectModel, query : String) : PredictedResult = {
+    logger.info()
+
+    val str : String = shouldReject(query) || alreadyDuplicated(model, query)  match {
       case true => "reject"
       case false => "no-reject"
     }
+
+    logger.info(query + " returns " + str)
+    logger.info()
 
     new PredictedResult(str, 1.0)
   }

@@ -52,8 +52,14 @@ class DataSource (
           case l => l.trim.replace("\n", "nn")
       }
 
-      Listicle(label)
-    }).cache
+      // NOTE: assuming the article was accepted does not auto-reject the article
+      // later in the pipeline
+      val accepted : Boolean = e.properties.getOrElse("accepted", true)
+
+      (label, if(accepted) 0 else 1)
+    }).reduceByKey(_ + _).map( tuple =>
+      Listicle(tuple._1, tuple._2)
+    ).cache
   }
 
   // Helper function used to store stop words from
@@ -109,7 +115,16 @@ class DataSource (
 
 // 3. Listicle class serving as a wrapper for both our
 // data's class label and document string.
-case class Listicle( text : String) extends Serializable
+case class ListicleTemp(
+  text : String,
+  accepted : Boolean,
+  acceptedCnt : Int
+) extends Serializable
+
+case class Listicle(
+  text : String,
+  rejectScore : Int
+) extends Serializable
 
 // 4. TrainingData class serving as a wrapper for all
 // read in from the Event Server.
@@ -120,15 +135,29 @@ class TrainingData(
 
   // Sanity check to make sure your data is being fed in correctly.
 
+  private def toOutput(listicleMap : Array[Listicle]) = {
+    if(listicleMap.length == 0) {
+      println("*** NO DATA IN THIS MAP ***")
+    }
+
+    (0 until listicleMap.length).foreach(
+      k => println("Listicle " + (k + 1) +" tuple: " + listicleMap(k))
+    )
+  }
+
   def sanityCheck {
     try {
-      val obs : Array[String] = data.takeSample(false, 5).map(_.text)
+      val obs : Array[Listicle] = data.takeSample(false, 10) //.map(_)
 
       println()
-      (0 until 5).foreach(
-        k => println("Listicle " + (k + 1) +" text: " + obs(k))
-      )
+      println("checking for listicles")
+      toOutput(obs)
+
+      println("checking for some articles previously rejected")
+      val someOnes = data.filter(l => l.rejectScore > 0).takeSample(false, 10)
+      toOutput(someOnes)
       println()
+
     } catch {
       case (e : ArrayIndexOutOfBoundsException) => {
         println()

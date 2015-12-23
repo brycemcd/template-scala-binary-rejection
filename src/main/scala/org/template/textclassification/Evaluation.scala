@@ -42,6 +42,6 @@ object EngineParamsList extends EngineParamsGenerator {
 
   // Set the algorithm params for which we will assess an accuracy score.
   engineParamsList = Seq(
-    baseEP.copy(algorithmParamsList = Seq(("nb", BinRejectAlgoParams(1.0))))
+    baseEP.copy(algorithmParamsList = Seq(("br", BinRejectAlgoParams(1.0))))
   )
 }
