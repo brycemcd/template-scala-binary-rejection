@@ -4,20 +4,19 @@
   "engineFactory": "org.template.textclassification.BinaryRejectEngine",
   "datasource": {
     "params": {
-      "appName": "rejectRules"
+      "appName": "rejectRules",
+      "evalK" : 2
     }
   },
   "preparator": {
     "params": {
-      "nGram": 1,
-      "numFeatures": 500,
-      "SPPMI": false
     }
   },
   "algorithms": [
     {
       "name": "br",
-      "params": {}
+      "params": {
+      }
     }
   ]
 }

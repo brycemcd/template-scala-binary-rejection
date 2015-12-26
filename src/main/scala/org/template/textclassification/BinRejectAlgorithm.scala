@@ -8,6 +8,7 @@ import org.apache.spark.mllib.classification.NaiveBayesModel
 import org.apache.spark.mllib.linalg.Vector
 import com.github.fommil.netlib.F2jBLAS
 import grizzled.slf4j.Logger
+import java.util.Calendar
 
 import scala.math._
 
@@ -48,9 +49,7 @@ class BinRejectModel(val pd: PreparedData) extends Serializable {
     val words = query.split(" ")
     val matchedIndex : Int = words.map(word => rejectWords.indexOf(word.toLowerCase)).max
 
-    val shouldReject : Boolean = matchedIndex > -1
-    logger.info(s"checking containsRejectWord: $shouldReject")
-    shouldReject
+    matchedIndex > -1
   }
 
   // TODO: add Read more stories on teh Quibb homepage
@@ -58,31 +57,38 @@ class BinRejectModel(val pd: PreparedData) extends Serializable {
   private val rejectPhrases : Array[String] = Array("A LERER HIPPEAU VENTURES EXPERIMENT")
 
   private def containsRejectPhrase(query: String) : Boolean = {
-    val shouldReject : Boolean =rejectPhrases.indexOf(query.trim) > -1
-
-    logger.info(s"checking containsRejectPhrase: $shouldReject")
-    shouldReject
+    rejectPhrases.indexOf(query.trim) > -1
   }
 
-  private def wordCountThreshold(query : String, threshold : Integer = 4) = {
-    val shouldReject = query.split(" ").length <= threshold
-
-    logger.info(s"checking wordCountThreshold: $shouldReject")
-    shouldReject
+  private def wordCountThreshold(query : String) = {
+    query.split(" ").length <= 3
   }
 
-  private def shouldReject(query: String) : Boolean = {
-    containsRejectWord(query) ||
-      containsRejectPhrase(query) ||
-      wordCountThreshold(query)
+  private def shouldRejectBoolFunctions(query: String, rejectFunctions: String => Boolean*) : Boolean = {
+    rejectFunctions.map{ rejectFunction =>
+
+      val shouldReject = rejectFunction(query)
+
+      logger.info("[" +
+                  Calendar.getInstance.getTime.toString +
+                  "]" +
+                  " checking " +
+                  rejectFunction.toString +
+                  ": " +
+                  shouldReject)
+      shouldReject
+    }.indexOf(true) > -1
   }
 
-  // TODO: if I've rejected a query before, reject it again
-  // TODO: output logger.info when processing a query
   def predict(model: BinRejectModel, query : String) : PredictedResult = {
     logger.info()
 
-    val str : String = shouldReject(query) || alreadyDuplicated(model, query)  match {
+    val boolRejections : Boolean = shouldRejectBoolFunctions(query,
+                                                              containsRejectWord,
+                                                              containsRejectPhrase,
+                                                              wordCountThreshold)
+
+    val str : String = boolRejections || alreadyDuplicated(model, query)  match {
       case true => "reject"
       case false => "no-reject"
     }

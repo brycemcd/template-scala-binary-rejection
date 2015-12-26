@@ -64,6 +64,7 @@ class DataSource (
 
   // Helper function used to store stop words from
   // event server.
+  // TODO these should be the auto-reject words / phrases
   private def readStopWords(sc : SparkContext) : Set[String] = {
     PEventStore.find(
       appName = dsp.appName,
