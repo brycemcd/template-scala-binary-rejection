@@ -34,9 +34,12 @@ class BinRejectAlgorithm extends P2LAlgorithm[PreparedData, BinRejectModel, Quer
 class BinRejectModel(val pd: PreparedData) extends Serializable {
   @transient lazy val logger = Logger[this.type]
 
+  // TODO: filter non-alpha nums from getting into the db in the first place
+  private def filterForAlphaNums(string: String) : String = string.replaceAll("[^a-zA-Z0-9\\s]", "")
+
   private def alreadyDuplicated(model: BinRejectModel, query: String) : Boolean = {
     val priorDecisions = model.pd.td
-    val matches = priorDecisions.filter(d => d.text == query)
+    val matches = priorDecisions.filter(d => filterForAlphaNums(d.text) == filterForAlphaNums(query))
 
     val shouldReject = if(matches.length > 0 && matches(0).rejectScore > 0) true else false
     logger.info(s"checking alreadyDuplicated: $shouldReject")
